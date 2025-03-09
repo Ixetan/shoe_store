@@ -1,0 +1,20 @@
+[
+    {
+        "name": "Травка",
+        "price": 100,
+        "description": "Детская обувь для детей не старше 0+",
+        "imageURL": "Trava.png"
+    },
+    {
+        "name": "Палитра",
+        "price": 1000000,
+        "description": "Для тех кому одна пара обуви будет мало",
+        "imageURL": "Palitra.png"
+    },
+    {
+        "name": "Кросворд",
+        "price": 5000,
+        "description": "С кросвордом в нутри",
+        "imageURL": "Crosvord.png"
+    }
+]
