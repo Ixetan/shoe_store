@@ -2,13 +2,13 @@ import asyncio
 from email import message
 from aiogram import F, Bot, Dispatcher
 from aiogram.filters.command import Command
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
 from aiogram.fsm.context import FSMContext
 
 from dotenv import dotenv_values
 from users import address
 from users.users import read_user_config, write_user_config, update_user_config, user_exists
-from keyboards.keyboards import start_keybord, settings_keybord, addresses_keybord, back_to_menu_keyboards, catalogue_keybord
+from keyboards.keyboards import start_keybord, settings_keybord, addresses_keybord, back_to_menu_keyboards, catalogue_keybord, item_keyboard
 from states.state import SettingsStates
 from users.address import Address
 from wares.wares import wares, Ware
@@ -43,8 +43,7 @@ async def cmd_start(message: Message):
 @dp.callback_query(F.data == 'setting')
 async def setting_menu(callback: CallbackQuery):
     await callback.message.edit_text('Настройки акаунта',
-                                     reply_markup=settings_keybord()
-                                     )
+                                     reply_markup=settings_keybord())
 
 
 
@@ -83,7 +82,7 @@ async def new_name(message: Message, state: FSMContext):
 
 
 
-@dp.callback_query(F.date=="addresses_settings")
+@dp.callback_query(F.data=="addresses_settings")
 async def addresses_settings(callback: CallbackQuery, state: FSMContext):
     user_id = callback.message.chat.id
     config = read_user_config(user_id=user_id)
@@ -94,21 +93,21 @@ async def addresses_settings(callback: CallbackQuery, state: FSMContext):
 
 
 
-@dp.callback_query(F.date=='add_address')
+@dp.callback_query(F.data=='add_address')
 async def add_address(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(text="Новый адрес:")
 
-    state.set_state(SettingsStates.add_address_label)
+    state.set_state(SettingsStates.address_label)
 
 
 
-@dp.message(F.text, SettingsStates.add_address_label)
+@dp.message(F.text, SettingsStates.address_label)
 async def add_address_label(messahe: Message, state: FSMContext):
     address_label = message.text
 
     await message.answer(f'Укажите адресс для {address_label}')
     await state.set_state(SettingsStates.add_address_text)
-    await state.set_date({"label": address_label})
+    await state.set_data({"label": address_label})
 
 
 
@@ -136,8 +135,8 @@ async def add_address_text(message: Message, state: FSMContext):
     update_user_config(user_id=user_id, keys_to_update=keys_to_update)
 
 
-
-@dp.callback_query(F.date=='catalogue')
+@dp.callback_query(F.data=='back_to_catalogue')
+@dp.callback_query(F.data=='catalogue')
 async def catalogue(callback: CallbackQuery, state: FSMContext):
     user_id = callback.message.chat.id
     user = read_user_config(user_id=user_id)
@@ -147,13 +146,17 @@ async def catalogue(callback: CallbackQuery, state: FSMContext):
 
 
 
-@dp.callback_query(F.date.startswith('ware_'))
+@dp.callback_query(F.data.startswith('ware_'))
 async def ware_info(callback: CallbackQuery):
-    ware_id = int(callback.date.split('_')[-1])
-    ware = Ware.get_ware_by_id(wares, ware_id)
+    ware_id = int(callback.data.split('_')[-1])
+    ware: Ware = Ware.get_ware_by_id(wares, ware_id)
 
-    await callback.message.edit_text(ware.get_ware_details())
+    #для отправки фото:
+    #await callback.message.answer_photo(photo=ware.inputImage)
 
+    await callback.message.edit_text(text=ware.get_ware_details(),
+                                     reply_markup=item_keyboard())
+    
 
 
 async def main():
